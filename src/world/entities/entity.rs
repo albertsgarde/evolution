@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 use strum::EnumDiscriminants;
 
 use crate::{
-    world::{Location, Vector},
-    State,
+    world::{Location, PhysicsBody, Vector},
+    Config, State,
 };
 
-use super::PhysicsBody;
+use super::creature::Creature;
 
 #[derive(Debug, Clone)]
 pub struct Entity {
@@ -22,10 +22,10 @@ impl Entity {
         }
     }
 
-    pub fn creature(location: Location) -> Self {
+    pub fn creature(config: &Config, location: Location) -> Self {
         Self {
             body: PhysicsBody::new(location, Vector::new(0.0, 0.0)),
-            entity_type: EntityData::creature(),
+            entity_type: EntityData::creature(config),
         }
     }
 
@@ -42,7 +42,7 @@ impl Entity {
     }
 
     pub fn is_creature(&self) -> bool {
-        matches!(self.entity_type, EntityData::Creature)
+        matches!(self.entity_type, EntityData::Creature(_))
     }
 
     pub fn tick(&self, state: &State) -> Self {
@@ -53,12 +53,12 @@ impl Entity {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumDiscriminants)]
+#[derive(Debug, Clone, Serialize, Deserialize, EnumDiscriminants)]
 #[strum_discriminants(derive(Serialize, Deserialize))]
 #[strum_discriminants(vis(pub))]
 #[strum_discriminants(name(EntityType))]
 enum EntityData {
-    Creature,
+    Creature(Creature),
     Food,
 }
 
@@ -67,42 +67,21 @@ impl EntityData {
         EntityData::Food
     }
 
-    pub fn creature() -> EntityData {
-        EntityData::Creature
+    pub fn creature(config: &Config) -> EntityData {
+        EntityData::Creature(Creature::new(config))
     }
 
     pub fn entity_type(&self) -> EntityType {
         match self {
-            EntityData::Creature => EntityType::Creature,
+            EntityData::Creature(_) => EntityType::Creature,
             EntityData::Food => EntityType::Food,
         }
     }
 
     pub fn tick(&self, body: &mut PhysicsBody, state: &State) -> Self {
         match self {
-            EntityData::Creature => {
-                const MAX_ACCELERATION: f32 = 4.2;
-
-                if let Some(food) = state.entities().filter(|&entity| entity.is_food()).min_by(
-                    |&entity1, &entity2| {
-                        (entity1.location() - body.location())
-                            .norm_squared()
-                            .total_cmp(&(entity2.location() - body.location()).norm_squared())
-                    },
-                ) {
-                    let target_location = food.location();
-
-                    let target_delta = target_location - body.location();
-                    let cur_velocity = body.velocity();
-                    let target_acceleration = target_delta - cur_velocity;
-                    let norm_acceleration = target_acceleration.normalize() * MAX_ACCELERATION;
-
-                    body.accelerate(state.config(), norm_acceleration);
-                }
-
-                *self
-            }
-            _ => *self,
+            EntityData::Creature(creature) => EntityData::Creature(creature.tick(body, state)),
+            _ => self.clone(),
         }
     }
 }

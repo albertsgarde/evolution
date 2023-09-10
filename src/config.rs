@@ -53,6 +53,10 @@ impl Config {
         ENTITY_SIZE
     }
 
+    pub fn creature_starting_energy(&self) -> f32 {
+        100.
+    }
+
     pub fn food_spawn_rate(&self) -> f32 {
         FOOD_SPAWN_RATE
     }

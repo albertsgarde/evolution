@@ -20,10 +20,13 @@ impl State {
 
         let entities = (0..num_creatures)
             .map(|_| {
-                Entity::creature(Location::new(
-                    rng.gen_range(0.0..config.world_width()),
-                    rng.gen_range(0.0..config.world_height()),
-                ))
+                Entity::creature(
+                    &config,
+                    Location::new(
+                        rng.gen_range(0.0..config.world_width()),
+                        rng.gen_range(0.0..config.world_height()),
+                    ),
+                )
             })
             .collect();
 
