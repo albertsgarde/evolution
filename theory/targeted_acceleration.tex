@@ -1,0 +1,92 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\begin{itemize}
+    \item $\vec{x}\in\R^+\to\R^2$: Position at time $t$.
+    \item $\vec{x_0}\in\R^2$: Initial position $\vec{x_0}=\vec x(0)$.
+    \item $\vec{v_0}\in\R^2$: Initial velocity.
+    \item $\vec{a}\in\R^2$: Constant acceleration.
+    \item $\vec{d}\in\R^2$: Target.
+    \item $\mat{M}\in\R^{2\times2}$: Transformation matrix \begin{align*}
+        \mat{M} &= \begin{bmatrix}
+            \vec d & \vec v_0
+        \end{bmatrix}
+    \end{align*}
+    \item $\vec {e_k}\in\R^2$: Unit vector for dimension $k$ \begin{align*}
+        \vec {e_1}=\cvec{1}{0}\quad\vec {e_2}=\cvec{0}{1}
+    \end{align*}
+    \item $\vec {\alpha}\in\R^2$: Acceleraction vector $\vec a$ transformed by $\mat M^{-1}$.
+\end{itemize}
+
+\begin{align*}
+    \vec x(t) &= \vec x_0 + \vec v_0 t + \frac{1}{2}\vec a t^2
+\end{align*}
+We assume w.l.o.g that $\vec x_0=\vec 0$ and so
+\begin{align*}
+    \vec x(t) &= \vec v_0 t + \frac{1}{2}\vec a t^2
+\end{align*}
+    
+To find the $\vec a$ necessary to get to the target at time $t$ we have
+\begin{align*}
+    \vec d &= \vec v_0 t + \frac{1}{2}\vec a t^2\\
+    \vec a &= \frac{2}{t^2}(\vec d - \vec v_0 t)
+\end{align*}
+We transform everything by $\mat M^{-1}$ to get
+\begin {align*}
+    \mat M^{-1}\vec d &= \mat M^{-1}\vec v_0 t + \frac{1}{2}\mat M^{-1}\vec a t^2\\
+    \vec {e_1} &=\vec{e_2}t+\frac12\vec{\alpha}t^2
+\end{align*}
+Solving this for $\vec\alpha$ gives us
+\begin{align*}
+    \vec\alpha &= 2\frac{\vec{e_1}-\vec{e_2}t}{t^2}\\
+    \vec\alpha &= \frac{2}{t^2}\cvec{1}{-t}
+\end{align*}
+
+\subsection*{Attempt 2}
+
+The acceleration in a given dimension is described by the following differential equation
+\begin{align*}
+    x''(t) &= -\mu x'(t)+a
+\end{align*}
+where $\mu$ is the friction coefficient and $a$ is the constant acceleration applied by the creature.
+
+This differential equation has the solution
+\begin{align*}
+    x'(t)=C\e^{-\mu t}+\frac{a}{\mu}
+\end{align*}
+Using $x'(0)=v_0$ we get
+\begin{align*}
+    C &= v_0-\frac{a}{\mu}
+\end{align*}
+and so
+\begin{align*}
+    x'(t) &= (v_0-\frac{a}{\mu})\e^{-\mu t}+\frac{a}{\mu}\\
+    x(t)&=x_0+\int_0^tx'(s)\diff s\\
+    &=x_0+\int_0^t(v_0-\frac{a}{\mu})\e^{-\mu t}+\frac{a}{\mu}\diff s\\
+    &=x_0+(v_0-\frac{a}{\mu})\int_0^t\e^{-\mu t}\diff s+\int_0^t\frac{a}{\mu}\diff s\\
+    &=x_0+(v_0-\frac{a}{\mu})\left[-\frac{\e^{-\mu t}}{\mu}\right]_0^t+\frac{a}{\mu}t\\
+    &=x_0+\frac{1}{\mu}(v_0-\frac{a}{\mu})\left[\e^{-\mu s}\right]_t^0+\frac{a}{\mu}t\\
+    &=x_0+\frac{1}{\mu}(v_0-\frac{a}{\mu})\left(1-\e^{-\mu t}\right)+\frac{a}{\mu}t\\
+    &=x_0+\frac{1}{\mu}(v_0-\frac{a}{\mu})\left(1-\e^{-\mu t}\right)+\frac{a}{\mu}t\\
+    &=x_0+\frac{v_0}{\mu}\left(1-\e^{-\mu t}\right)+a\left(\frac{t}{\mu}-\frac{1}{\mu^2}\left(1-\e^{-\mu t}\right)\right)\\
+    &=x_0+v_0\alpha(t)+a\left(\frac{t}{\mu}+\frac{1}{\mu}\alpha(t)\right)
+\end{align*}
+where $\alpha(t)=-\frac{1}{\mu}\left(1-\e^{-\mu t}\right)$.
+Collecting both dimensions into vectors we get
+\begin{align*}
+    \vec x(t)&=\vec x_0-\alpha(t)\vec v_0+\frac{1}{\mu}\left(t+\alpha(t)\right)\vec a
+\end{align*}
+Let $\vec x_1$ be the difference between the initial position $\vec x_0$ and the destination.
+Then we can solve for $\vec a$.
+\begin{align*}
+    \vec x_1&=-\alpha(t)\vec v_0+\frac{1}{\mu}\left(t+\alpha(t)\right)\vec a\\
+    \vec a&=\gamma(t)\left(\vec x_1+\alpha(t)\vec v_0\right)
+\end{align*}
+where $\gamma(t)=\frac{\mu}{t+\alpha(t)}$.
+The norm of $\vec a$ is then
+\begin{align*}
+    \norm{\vec a}^2&=\gamma(t)^2\left(\norm{\vec x_1}^2+\alpha(t)^2\norm{\vec v_0}^2+2\alpha(t)\vec x_1\vec v_0\right)
+\end{align*}
+
+\end{document}
