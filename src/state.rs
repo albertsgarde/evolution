@@ -14,29 +14,20 @@ pub struct State {
 }
 
 impl State {
-    pub fn init(config: Config, num_creatures: usize, num_food: usize) -> Self {
-        let rng = Pcg64Mcg::new(config.rng_seed());
+    pub fn init(config: Config, num_creatures: usize) -> Self {
+        let mut rng = Pcg64Mcg::new(config.rng_seed());
 
-        /*let mut entities = Vec::with_capacity(num_creatures + num_food);
-        entities.extend((0..num_creatures).map(|_| {
-            Entity::creature(
-                Location::new(
-                    rng.gen_range(0.0..config.world_width()),
-                    rng.gen_range(0.0..config.world_height()),
-                ),
-                Vector::new(rng.gen_range(-10.0..10.0), rng.gen_range(-10.0..10.0)),
-            )
-        }));
-        entities.extend((0..num_food).map(|_| {
-            Entity::food(Location::new(
-                rng.gen_range(0.0..config.world_width()),
-                rng.gen_range(0.0..config.world_height()),
-            ))
-        }));*/
-
-        let creature = Entity::creature(Location::new(50., 50.), Vector::new(20., -5.));
-        let food = Entity::food(Location::new(35., 20.));
-        let entities = vec![creature, food];
+        let entities = (0..num_creatures)
+            .map(|_| {
+                Entity::creature(
+                    Location::new(
+                        rng.gen_range(0.0..config.world_width()),
+                        rng.gen_range(0.0..config.world_height()),
+                    ),
+                    Vector::new(rng.gen_range(-10.0..10.0), rng.gen_range(-10.0..10.0)),
+                )
+            })
+            .collect();
 
         Self {
             config,
@@ -68,7 +59,21 @@ impl State {
 
     pub fn tick(&mut self) {
         self.spawn_food();
-        let new_entities = self.entities.iter().map(|e| e.tick(self)).collect();
+        let new_entities: Vec<_> = self.entities.iter().map(|e| e.tick(self)).collect();
+        let new_entities = new_entities
+            .iter()
+            .filter(|entity| {
+                !(entity.is_food()
+                    && new_entities.iter().any(|other| {
+                        other.is_creature()
+                            && (entity.location() - other.location()).norm_squared()
+                                < self.config().entity_size().powi(2)
+                    }))
+            })
+            .cloned()
+            .collect();
         self.entities = new_entities;
+
+        // Remove food that is touched by a creature.
     }
 }

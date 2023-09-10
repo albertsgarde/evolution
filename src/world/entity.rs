@@ -93,15 +93,9 @@ impl EntityData {
                     let target_location = food.location();
 
                     let target_delta = target_location - body.location();
-                    let cur_velocity = body.velocity() * 2.;
+                    let cur_velocity = body.velocity();
                     let target_acceleration = target_delta - cur_velocity;
-                    let norm_acceleration = if target_acceleration.norm_squared()
-                        < MAX_ACCELERATION * MAX_ACCELERATION
-                    {
-                        target_acceleration
-                    } else {
-                        target_acceleration.normalize() * MAX_ACCELERATION
-                    };
+                    let norm_acceleration = target_acceleration.normalize() * MAX_ACCELERATION;
 
                     body.accelerate(state.config(), norm_acceleration);
                 }

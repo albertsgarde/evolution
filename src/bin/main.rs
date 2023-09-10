@@ -12,16 +12,16 @@ use macroquad::{
 };
 use rand_pcg::Pcg64Mcg;
 
-const TICKS_PER_SECOND: f64 = 60.0;
-const SECONDS_PER_TICK: f64 = 1.0 / TICKS_PER_SECOND;
+const SPEEDUP: f64 = 10.;
 
 #[macroquad::main("Evolution")]
 async fn main() {
     let config = evolution::Config::default();
-    let mut state = State::init(config.clone(), 5, 2);
+    let mut state = State::init(config.clone(), 5);
 
     let camera = Camera::view_whole_world(&config, graphics::screen_size());
 
+    let seconds_per_tick = config.tick_length() as f64 / SPEEDUP;
     let mut tick_count = 0;
     let mut next_tick_time = mq::get_time();
 
@@ -30,7 +30,7 @@ async fn main() {
     loop {
         while mq::get_time() > next_tick_time {
             state.tick();
-            next_tick_time += SECONDS_PER_TICK;
+            next_tick_time += seconds_per_tick;
             tick_count += 1;
             if tick_count > 5 {
                 //panic!();
