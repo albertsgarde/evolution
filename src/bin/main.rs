@@ -17,10 +17,8 @@ const SECONDS_PER_TICK: f64 = 1.0 / TICKS_PER_SECOND;
 
 #[macroquad::main("Evolution")]
 async fn main() {
-    let mut rng = Pcg64Mcg::new(0);
-
     let config = evolution::Config::default();
-    let mut state = State::init(config.clone(), 5, 2, &mut rng);
+    let mut state = State::init(config.clone(), 5, 2);
 
     let camera = Camera::view_whole_world(&config, graphics::screen_size());
 

@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::world::Location;
 
+const RNG_SEED: u128 = 0;
+
 const WORLD_WIDTH: f32 = 100.0;
 const WORLD_HEIGHT: f32 = 100.0;
 const UPPER_LEFT: Location = Location::new(0., 0.);
@@ -13,10 +15,16 @@ const DRAG: f32 = 0.1;
 
 const ENTITY_SIZE: f32 = 2.;
 
+const FOOD_SPAWN_RATE: f32 = 0.4;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {}
 
 impl Config {
+    pub fn rng_seed(&self) -> u128 {
+        RNG_SEED
+    }
+
     pub fn world_width(&self) -> f32 {
         WORLD_WIDTH
     }
@@ -43,5 +51,9 @@ impl Config {
 
     pub fn entity_size(&self) -> f32 {
         ENTITY_SIZE
+    }
+
+    pub fn food_spawn_rate(&self) -> f32 {
+        FOOD_SPAWN_RATE
     }
 }
