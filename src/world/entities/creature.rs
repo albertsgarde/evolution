@@ -41,7 +41,9 @@ impl Creature {
             body.accelerate(state.config(), norm_acceleration);
         }
 
-        self.clone()
+        Self {
+            energy: self.energy - 0.1 * state.config().tick_length(),
+        }
     }
 
     pub fn eat(&self, config: &Config, energy: f32) -> Self {

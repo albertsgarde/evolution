@@ -3,7 +3,7 @@ use rand_distr::Distribution;
 use rand_pcg::Pcg64Mcg;
 
 use crate::{
-    world::{Entity, Location},
+    world::{Entity, EntityData, Location},
     Config,
 };
 
@@ -89,7 +89,7 @@ impl State {
             })
             .cloned()
             .collect();
-        let new_entities = new_entities
+        let new_entities: Vec<_> = new_entities
             .into_iter()
             .zip(energy_eaten)
             .map(|(entity, energy)| {
@@ -97,6 +97,13 @@ impl State {
                     entity.eat(&self.config, energy)
                 } else {
                     entity
+                }
+            })
+            .filter(|entity| {
+                if let EntityData::Creature(creature) = entity.entity_data() {
+                    creature.energy() > 0.
+                } else {
+                    true
                 }
             })
             .collect();

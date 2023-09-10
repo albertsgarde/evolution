@@ -12,7 +12,7 @@ use macroquad::{
 };
 use nalgebra::Vector4;
 
-const SPEEDUP: f64 = 10.;
+const SPEEDUP: f64 = 20.;
 
 #[macroquad::main("Evolution")]
 async fn main() {
