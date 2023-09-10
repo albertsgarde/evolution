@@ -16,7 +16,7 @@ const SPEEDUP: f64 = 10.;
 #[macroquad::main("Evolution")]
 async fn main() {
     let config = evolution::Config::default();
-    let mut state = State::init(config.clone(), 5);
+    let mut state = State::init(config.clone(), 1);
 
     let camera = Camera::view_whole_world(&config, graphics::screen_size());
 

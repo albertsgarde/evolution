@@ -54,6 +54,10 @@ impl Config {
     }
 
     pub fn creature_starting_energy(&self) -> f32 {
+        40.
+    }
+
+    pub fn creature_max_energy(&self) -> f32 {
         100.
     }
 

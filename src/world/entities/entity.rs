@@ -51,6 +51,16 @@ impl Entity {
         let body = body.tick(state);
         Self { body, entity_type }
     }
+
+    pub fn eat(&self, config: &Config, energy: f32) -> Self {
+        match &self.entity_type {
+            EntityData::Creature(creature) => Self {
+                body: self.body.clone(),
+                entity_type: EntityData::Creature(creature.eat(config, energy)),
+            },
+            EntityData::Food => panic!("Food cannot eat!"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, EnumDiscriminants)]

@@ -67,18 +67,38 @@ impl State {
         self.spawn_food();
         let new_entities: Vec<_> = self.entities.iter().map(|e| e.tick(self)).collect();
 
-        // Remove food that is touched by a creature.
-        let new_entities = new_entities
+        // Eat food.
+        let mut energy_eaten = vec![0.; new_entities.len()];
+        let new_entities: Vec<_> = new_entities
             .iter()
             .filter(|entity| {
-                !(entity.is_food()
-                    && new_entities.iter().any(|other| {
+                if entity.is_food() {
+                    if let Some(index) = new_entities.iter().position(|other| {
                         other.is_creature()
                             && (entity.location() - other.location()).norm_squared()
                                 < self.config().entity_size().powi(2)
-                    }))
+                    }) {
+                        energy_eaten[index] += 1.;
+                        false
+                    } else {
+                        true
+                    }
+                } else {
+                    true
+                }
             })
             .cloned()
+            .collect();
+        let new_entities = new_entities
+            .into_iter()
+            .zip(energy_eaten)
+            .map(|(entity, energy)| {
+                if energy != 0. {
+                    entity.eat(&self.config, energy)
+                } else {
+                    entity
+                }
+            })
             .collect();
         self.entities = new_entities;
 

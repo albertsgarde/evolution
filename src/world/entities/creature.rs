@@ -39,4 +39,11 @@ impl Creature {
 
         self.clone()
     }
+
+    pub fn eat(&self, config: &Config, energy: f32) -> Self {
+        let max_energy = config.creature_max_energy();
+        Self {
+            energy: self.energy + energy * (1. - (self.energy / max_energy)),
+        }
+    }
 }
