@@ -1,3 +1,7 @@
+use std::f32::consts::PI;
+
+use itertools::Either;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use strum::EnumDiscriminants;
 
@@ -11,30 +15,30 @@ use super::creature::Creature;
 #[derive(Debug, Clone)]
 pub struct Entity {
     body: PhysicsBody,
-    entity_type: EntityData,
+    data: EntityData,
 }
 
 impl Entity {
     pub fn food(location: Location) -> Self {
         Self {
             body: PhysicsBody::new(location, Vector::new(0.0, 0.0)),
-            entity_type: EntityData::food(),
+            data: EntityData::food(),
         }
     }
 
     pub fn creature(config: &Config, location: Location) -> Self {
         Self {
             body: PhysicsBody::new(location, Vector::new(0.0, 0.0)),
-            entity_type: EntityData::creature(config),
+            data: EntityData::creature(config),
         }
     }
 
     pub fn entity_data(&self) -> &EntityData {
-        &self.entity_type
+        &self.data
     }
 
     pub fn entity_type(&self) -> EntityType {
-        self.entity_type.entity_type()
+        self.data.entity_type()
     }
 
     pub fn location(&self) -> Location {
@@ -42,27 +46,57 @@ impl Entity {
     }
 
     pub fn is_food(&self) -> bool {
-        matches!(self.entity_type, EntityData::Food)
+        matches!(self.data, EntityData::Food)
     }
 
     pub fn is_creature(&self) -> bool {
-        matches!(self.entity_type, EntityData::Creature(_))
+        matches!(self.data, EntityData::Creature(_))
     }
 
     pub fn tick(&self, state: &State) -> Self {
         let mut body = self.body.clone();
-        let entity_type = self.entity_type.tick(&mut body, state);
+        let entity_type = self.data.tick(&mut body, state);
         let body = body.tick(state);
-        Self { body, entity_type }
+        Self {
+            body,
+            data: entity_type,
+        }
     }
 
     pub fn eat(&self, config: &Config, energy: f32) -> Self {
-        match &self.entity_type {
+        match &self.data {
             EntityData::Creature(creature) => Self {
                 body: self.body.clone(),
-                entity_type: EntityData::Creature(creature.eat(config, energy)),
+                data: EntityData::Creature(creature.eat(config, energy)),
             },
             EntityData::Food => panic!("Food cannot eat!"),
+        }
+    }
+
+    pub fn reproduce(self, config: &Config, rng: &mut impl Rng) -> impl Iterator<Item = Self> {
+        match &self.data {
+            EntityData::Creature(creature) => {
+                if let Some((child1, child2)) = creature.reproduce(config) {
+                    let child_bounce = config.creature_child_bounce()
+                        * Vector::new(rng.gen_range(-PI..PI).cos(), rng.gen_range(-PI..PI).sin());
+                    Either::Left(
+                        [
+                            Self {
+                                body: self.body.clone().add_velocity(child_bounce),
+                                data: EntityData::Creature(child1),
+                            },
+                            Self {
+                                body: self.body.add_velocity(-child_bounce),
+                                data: EntityData::Creature(child2),
+                            },
+                        ]
+                        .into_iter(),
+                    )
+                } else {
+                    Either::Right(std::iter::once(self))
+                }
+            }
+            EntityData::Food => Either::Right(std::iter::once(self)),
         }
     }
 }

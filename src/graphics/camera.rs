@@ -28,9 +28,9 @@ impl Camera {
 
         Camera2D::from_display_rect(Rect::new(
             self.location.x(),
-            self.location.y(),
+            self.location.y() + world_screen_size.y,
             world_screen_size.x,
-            world_screen_size.y,
+            -world_screen_size.y,
         ))
     }
 

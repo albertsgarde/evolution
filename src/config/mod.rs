@@ -66,6 +66,14 @@ impl Config {
         100.
     }
 
+    pub fn creature_reproduction_energy(&self) -> f32 {
+        60.
+    }
+
+    pub fn creature_child_bounce(&self) -> f32 {
+        2.
+    }
+
     pub fn food_spawn_rate(&self) -> f32 {
         FOOD_SPAWN_RATE
     }

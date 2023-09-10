@@ -49,7 +49,24 @@ impl Creature {
     pub fn eat(&self, config: &Config, energy: f32) -> Self {
         let max_energy = config.creature_max_energy();
         Self {
-            energy: self.energy + energy * (1. - (self.energy / max_energy)),
+            energy: self.energy + energy * (1. - (self.energy / max_energy).powi(2)),
+        }
+    }
+
+    pub fn reproduce(&self, config: &Config) -> Option<(Self, Self)> {
+        if self.energy > config.creature_reproduction_energy() {
+            let child_energy = self.energy / 2.;
+            println!("Reproducing with energy {child_energy}",);
+            Some((
+                Self {
+                    energy: child_energy,
+                },
+                Self {
+                    energy: child_energy,
+                },
+            ))
+        } else {
+            None
         }
     }
 }

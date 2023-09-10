@@ -21,6 +21,13 @@ impl PhysicsBody {
         self.velocity
     }
 
+    pub fn add_velocity(self, velocity: Vector) -> Self {
+        PhysicsBody {
+            velocity: self.velocity + velocity,
+            ..self
+        }
+    }
+
     /// Add a acceleration vector to the bodies velocity.
     pub fn accelerate(&mut self, config: &Config, acceleration: Vector) {
         self.velocity += acceleration * config.tick_length();

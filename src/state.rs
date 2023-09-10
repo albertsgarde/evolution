@@ -46,7 +46,7 @@ impl State {
         self.tick_count
     }
 
-    pub fn entities(&self) -> impl Iterator<Item = &Entity> {
+    pub fn entities(&self) -> impl ExactSizeIterator<Item = &Entity> {
         self.entities.iter()
     }
 
@@ -69,36 +69,34 @@ impl State {
         let new_entities: Vec<_> = self.entities.iter().map(|e| e.tick(self)).collect();
 
         // Eat food.
-        let mut energy_eaten = vec![0.; new_entities.len()];
-        let new_entities: Vec<_> = new_entities
+        let mut energy_eaten = vec![(true, 0.); new_entities.len()];
+        for (food_index, food) in new_entities
             .iter()
-            .filter(|entity| {
-                if entity.is_food() {
-                    if let Some(index) = new_entities.iter().position(|other| {
-                        other.is_creature()
-                            && (entity.location() - other.location()).norm_squared()
-                                < self.config().entity_size().powi(2)
-                    }) {
-                        energy_eaten[index] += 1.;
-                        false
-                    } else {
-                        true
-                    }
-                } else {
-                    true
-                }
-            })
-            .cloned()
-            .collect();
+            .enumerate()
+            .filter(|(_, entity)| entity.is_food())
+        {
+            if let Some(creature_index) = new_entities.iter().position(|other| {
+                other.is_creature()
+                    && (food.location() - other.location()).norm_squared()
+                        < self.config().entity_size().powi(2)
+            }) {
+                energy_eaten[creature_index].1 += 3.;
+                energy_eaten[food_index].0 = false;
+            }
+        }
         // Feed creatures.
         let new_entities: Vec<_> = new_entities
             .into_iter()
             .zip(energy_eaten)
-            .map(|(entity, energy)| {
-                if energy != 0. {
-                    entity.eat(&self.config, energy)
+            .filter_map(|(entity, (survived, energy))| {
+                if survived {
+                    Some(if energy != 0. {
+                        entity.eat(&self.config, energy)
+                    } else {
+                        entity
+                    })
                 } else {
-                    entity
+                    None
                 }
             })
             // Kill creatures with no energy.
@@ -109,6 +107,8 @@ impl State {
                     true
                 }
             })
+            // Reproduce.
+            .flat_map(|entity| entity.reproduce(&self.config, &mut self.rng))
             .collect();
         self.entities = new_entities;
 
