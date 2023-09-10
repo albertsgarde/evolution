@@ -65,6 +65,7 @@ impl State {
 
     pub fn tick(&mut self) {
         self.spawn_food();
+        // Tick entities.
         let new_entities: Vec<_> = self.entities.iter().map(|e| e.tick(self)).collect();
 
         // Eat food.
@@ -89,6 +90,7 @@ impl State {
             })
             .cloned()
             .collect();
+        // Feed creatures.
         let new_entities: Vec<_> = new_entities
             .into_iter()
             .zip(energy_eaten)
@@ -99,6 +101,7 @@ impl State {
                     entity
                 }
             })
+            // Kill creatures with no energy.
             .filter(|entity| {
                 if let EntityData::Creature(creature) = entity.entity_data() {
                     creature.energy() > 0.
