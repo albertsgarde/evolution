@@ -3,13 +3,14 @@ use rand_distr::Distribution;
 use rand_pcg::Pcg64Mcg;
 
 use crate::{
-    world::{Entity, Location, Vector},
+    world::{Entity, Location},
     Config,
 };
 
 pub struct State {
     config: Config,
     entities: Vec<Entity>,
+    tick_count: u64,
     rng: Pcg64Mcg,
 }
 
@@ -29,12 +30,17 @@ impl State {
         Self {
             config,
             entities,
+            tick_count: 0,
             rng,
         }
     }
 
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    pub fn tick_count(&self) -> u64 {
+        self.tick_count
     }
 
     pub fn entities(&self) -> impl Iterator<Item = &Entity> {
@@ -57,6 +63,8 @@ impl State {
     pub fn tick(&mut self) {
         self.spawn_food();
         let new_entities: Vec<_> = self.entities.iter().map(|e| e.tick(self)).collect();
+
+        // Remove food that is touched by a creature.
         let new_entities = new_entities
             .iter()
             .filter(|entity| {
@@ -71,6 +79,6 @@ impl State {
             .collect();
         self.entities = new_entities;
 
-        // Remove food that is touched by a creature.
+        self.tick_count += 1;
     }
 }

@@ -10,7 +10,6 @@ use macroquad::{
     color::{colors, Color},
     window::clear_background,
 };
-use rand_pcg::Pcg64Mcg;
 
 const SPEEDUP: f64 = 10.;
 
@@ -22,7 +21,6 @@ async fn main() {
     let camera = Camera::view_whole_world(&config, graphics::screen_size());
 
     let seconds_per_tick = config.tick_length() as f64 / SPEEDUP;
-    let mut tick_count = 0;
     let mut next_tick_time = mq::get_time();
 
     camera::set_camera(&camera.mq_camera(graphics::screen_size()));
@@ -31,10 +29,6 @@ async fn main() {
         while mq::get_time() > next_tick_time {
             state.tick();
             next_tick_time += seconds_per_tick;
-            tick_count += 1;
-            if tick_count > 5 {
-                //panic!();
-            }
         }
 
         while mq::get_time() < next_tick_time {
