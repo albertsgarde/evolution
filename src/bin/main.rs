@@ -1,3 +1,6 @@
+use std::collections::VecDeque;
+use std::time::Duration;
+
 use evolution::graphics::{self, Camera};
 use evolution::world::EntityData;
 use evolution::{
@@ -13,9 +16,10 @@ use macroquad::{
 };
 use nalgebra::Vector4;
 
-const SPEEDUP: f64 = 500.;
+const SPEEDUP: Option<f64> = None;
+const FRAME_RATE: f64 = 60.;
 
-fn draw_info(state: &State) {
+fn draw_info(state: &State, tps: usize) {
     let num_creatures = state
         .entities()
         .filter(|entity| entity.is_creature())
@@ -80,6 +84,17 @@ fn draw_info(state: &State) {
             },
         );
     }
+
+    text::draw_text_ex(
+        &format!("TPS: {tps: >6}"),
+        state.config().world_width() + 1.,
+        state.config().world_height() - 1.,
+        TextParams {
+            font_size: 16,
+            font_scale: 1. / 4.,
+            ..Default::default()
+        },
+    );
 }
 
 #[macroquad::main("Evolution")]
@@ -89,69 +104,94 @@ async fn main() {
 
     let camera = Camera::view_whole_world(&config, graphics::screen_size());
 
-    let seconds_per_tick = config.tick_length() as f64 / SPEEDUP;
+    let seconds_per_tick = SPEEDUP.map(|speedup| config.tick_length() as f64 / speedup);
     let mut next_tick_time = mq::get_time();
+
+    let seconds_per_frame = 1. / FRAME_RATE;
+    let mut next_frame_time = mq::get_time();
+
+    let mut ticks_last_second = VecDeque::new();
 
     camera::set_camera(&camera.mq_camera(graphics::screen_size()));
 
     loop {
-        while mq::get_time() > next_tick_time {
-            state.tick();
-            next_tick_time += seconds_per_tick;
+        let cur_time = mq::get_time();
+
+        if mq::is_key_pressed(mq::KeyCode::Escape) {
+            break;
         }
-
-        while mq::get_time() < next_tick_time {
-            clear_background(Color::new(0.3921, 0.5842, 0.9294, 1.0));
-
-            for entity in state.entities() {
-                let color = match entity.entity_data() {
-                    EntityData::Creature(creature) => graphics::vec_to_color(
-                        config.graphics.creature_color()
-                            + Vector4::new(
-                                0.,
-                                0.,
-                                0.,
-                                creature.energy() / config.creature_max_energy() - 1.,
-                            ),
-                    ),
-                    EntityData::Food => colors::GREEN,
-                };
-
-                let offsets = [Vector::new(0., 0.)];
-                for offset in offsets {
-                    let location = entity.location()
-                        + offset.component_mul(&(config.lower_right() - Location::ORIGIN));
-                    mq::draw_circle(
-                        location.x(),
-                        location.y(),
-                        config.entity_size() * 0.5,
-                        color,
-                    );
-                }
+        while next_tick_time < next_frame_time {
+            ticks_last_second.push_front(cur_time);
+            while ticks_last_second
+                .back()
+                .map(|&t| cur_time - t > 1.)
+                .unwrap_or(false)
+            {
+                ticks_last_second.pop_back();
             }
-
-            let screen_edge = camera.camera_to_world(Location::ORIGIN + graphics::screen_size());
-            mq::draw_rectangle(
-                config.world_width(),
-                0.,
-                screen_edge.x() - config.world_width(),
-                screen_edge.y(),
-                mq::BLACK,
-            );
-
-            mq::draw_rectangle(
-                0.,
-                config.world_height(),
-                screen_edge.x(),
-                screen_edge.y() - config.world_height(),
-                mq::BLACK,
-            );
-
-            draw_info(&state);
-
-            camera::set_camera(&camera.mq_camera(graphics::screen_size()));
-
-            mq::next_frame().await
+            state.tick();
+            if let Some(seconds_per_tick) = seconds_per_tick {
+                next_tick_time += seconds_per_tick;
+            } else {
+                next_tick_time = mq::get_time();
+            }
         }
+
+        if next_frame_time > mq::get_time() {
+            std::thread::sleep(Duration::from_secs_f64(next_frame_time - mq::get_time()));
+        }
+
+        clear_background(Color::new(0.3921, 0.5842, 0.9294, 1.0));
+
+        for entity in state.entities() {
+            let color = match entity.entity_data() {
+                EntityData::Creature(creature) => graphics::vec_to_color(
+                    config.graphics.creature_color()
+                        + Vector4::new(
+                            0.,
+                            0.,
+                            0.,
+                            creature.energy() / config.creature_max_energy() - 1.,
+                        ),
+                ),
+                EntityData::Food => colors::GREEN,
+            };
+
+            let offsets = [Vector::new(0., 0.)];
+            for offset in offsets {
+                let location = entity.location()
+                    + offset.component_mul(&(config.lower_right() - Location::ORIGIN));
+                mq::draw_circle(
+                    location.x(),
+                    location.y(),
+                    config.entity_size() * 0.5,
+                    color,
+                );
+            }
+        }
+
+        let screen_edge = camera.camera_to_world(Location::ORIGIN + graphics::screen_size());
+        mq::draw_rectangle(
+            config.world_width(),
+            0.,
+            screen_edge.x() - config.world_width(),
+            screen_edge.y(),
+            mq::BLACK,
+        );
+
+        mq::draw_rectangle(
+            0.,
+            config.world_height(),
+            screen_edge.x(),
+            screen_edge.y() - config.world_height(),
+            mq::BLACK,
+        );
+
+        draw_info(&state, ticks_last_second.len());
+
+        camera::set_camera(&camera.mq_camera(graphics::screen_size()));
+
+        next_frame_time += seconds_per_frame;
+        mq::next_frame().await
     }
 }
