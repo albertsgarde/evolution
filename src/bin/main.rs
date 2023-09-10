@@ -1,5 +1,5 @@
 use evolution::graphics::{self, Camera};
-use evolution::world::EntityType;
+use evolution::world::EntityData;
 use evolution::{
     world::{Location, Vector},
     State,
@@ -10,6 +10,7 @@ use macroquad::{
     color::{colors, Color},
     window::clear_background,
 };
+use nalgebra::Vector4;
 
 const SPEEDUP: f64 = 10.;
 
@@ -35,22 +36,19 @@ async fn main() {
             clear_background(Color::new(0.3921, 0.5842, 0.9294, 1.0));
 
             for entity in state.entities() {
-                let color = match entity.entity_type() {
-                    EntityType::Creature => colors::RED,
-                    EntityType::Food => colors::GREEN,
+                let color = match entity.entity_data() {
+                    EntityData::Creature(creature) => graphics::vec_to_color(
+                        config.graphics.creature_color()
+                            + Vector4::new(
+                                0.,
+                                0.,
+                                0.,
+                                creature.energy() / config.creature_max_energy() - 1.,
+                            ),
+                    ),
+                    EntityData::Food => colors::GREEN,
                 };
 
-                /*let offsets = [
-                    Vector::new(0., 0.),
-                    Vector::new(0., -1.),
-                    Vector::new(1., -1.),
-                    Vector::new(1., 0.),
-                    Vector::new(1., 1.),
-                    Vector::new(0., 1.),
-                    Vector::new(-1., 1.),
-                    Vector::new(-1., 0.),
-                    Vector::new(-1., -1.),
-                ];*/
                 let offsets = [Vector::new(0., 0.)];
                 for offset in offsets {
                     let location = entity.location()

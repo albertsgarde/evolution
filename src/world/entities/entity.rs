@@ -29,6 +29,10 @@ impl Entity {
         }
     }
 
+    pub fn entity_data(&self) -> &EntityData {
+        &self.entity_type
+    }
+
     pub fn entity_type(&self) -> EntityType {
         self.entity_type.entity_type()
     }
@@ -67,7 +71,7 @@ impl Entity {
 #[strum_discriminants(derive(Serialize, Deserialize))]
 #[strum_discriminants(vis(pub))]
 #[strum_discriminants(name(EntityType))]
-enum EntityData {
+pub enum EntityData {
     Creature(Creature),
     Food,
 }

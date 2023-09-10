@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::world::Location;
 
+mod graphics;
+use graphics::Graphics;
+
 const RNG_SEED: u128 = 0;
 
 const WORLD_WIDTH: f32 = 100.0;
@@ -18,7 +21,9 @@ const ENTITY_SIZE: f32 = 2.;
 const FOOD_SPAWN_RATE: f32 = 0.4;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct Config {}
+pub struct Config {
+    pub graphics: Graphics,
+}
 
 impl Config {
     pub fn rng_seed(&self) -> u128 {

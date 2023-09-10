@@ -14,6 +14,10 @@ impl Creature {
         }
     }
 
+    pub fn energy(&self) -> f32 {
+        self.energy
+    }
+
     pub fn tick(&self, body: &mut PhysicsBody, state: &State) -> Self {
         const MAX_ACCELERATION: f32 = 4.2;
 
