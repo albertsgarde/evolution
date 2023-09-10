@@ -22,9 +22,9 @@ impl Entity {
         }
     }
 
-    pub fn creature(location: Location, velocity: Vector) -> Self {
+    pub fn creature(location: Location) -> Self {
         Self {
-            body: PhysicsBody::new(location, velocity),
+            body: PhysicsBody::new(location, Vector::new(0.0, 0.0)),
             entity_type: EntityData::creature(),
         }
     }
