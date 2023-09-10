@@ -13,7 +13,7 @@ use macroquad::{
 };
 use nalgebra::Vector4;
 
-const SPEEDUP: f64 = 20.;
+const SPEEDUP: f64 = 500.;
 
 fn draw_info(state: &State) {
     let num_creatures = state
@@ -31,10 +31,28 @@ fn draw_info(state: &State) {
             ..Default::default()
         },
     );
+    let avg_max_acceleration = state
+        .entities()
+        .filter_map(|entity| match entity.entity_data() {
+            EntityData::Creature(creature) => Some(creature.max_acceleration()),
+            _ => None,
+        })
+        .sum::<f32>()
+        / num_creatures as f32;
     text::draw_text_ex(
-        "Energies: ",
+        &format!("{avg_max_acceleration:.2}"),
         state.config().world_width() + 1.,
         7.,
+        TextParams {
+            font_size: 16,
+            font_scale: 1. / 4.,
+            ..Default::default()
+        },
+    );
+    text::draw_text_ex(
+        "Max acc. | Energy",
+        state.config().world_width() + 1.,
+        11.,
         TextParams {
             font_size: 16,
             font_scale: 1. / 4.,
@@ -50,10 +68,11 @@ fn draw_info(state: &State) {
         .enumerate()
     {
         let energy = creature.energy();
+        let max_acceleration = creature.max_acceleration();
         text::draw_text_ex(
-            &format!("{energy}"),
-            state.config().world_width() + 2.,
-            7. + ((index + 1) * 4) as f32,
+            &format!("{max_acceleration: >8.2} | {energy: >6.2}"),
+            state.config().world_width() + 1.,
+            15. + (index * 4) as f32,
             TextParams {
                 font_size: 16,
                 font_scale: 1. / 4.,

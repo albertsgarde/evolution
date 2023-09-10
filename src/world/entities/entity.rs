@@ -76,7 +76,7 @@ impl Entity {
     pub fn reproduce(self, config: &Config, rng: &mut impl Rng) -> impl Iterator<Item = Self> {
         match &self.data {
             EntityData::Creature(creature) => {
-                if let Some((child1, child2)) = creature.reproduce(config) {
+                if let Some((child1, child2)) = creature.reproduce(config, rng) {
                     let child_bounce = config.creature_child_bounce()
                         * Vector::new(rng.gen_range(-PI..PI).cos(), rng.gen_range(-PI..PI).sin());
                     Either::Left(

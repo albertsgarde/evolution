@@ -1,3 +1,5 @@
+use rand::Rng;
+use rand_distr::{Distribution, Normal};
 use serde::{Deserialize, Serialize};
 
 use crate::{world::PhysicsBody, Config, State};
@@ -5,12 +7,14 @@ use crate::{world::PhysicsBody, Config, State};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Creature {
     energy: f32,
+    max_acceleration: f32,
 }
 
 impl Creature {
     pub fn new(config: &Config) -> Self {
         Self {
             energy: config.creature_starting_energy(),
+            max_acceleration: 4.,
         }
     }
 
@@ -18,9 +22,11 @@ impl Creature {
         self.energy
     }
 
-    pub fn tick(&self, body: &mut PhysicsBody, state: &State) -> Self {
-        const MAX_ACCELERATION: f32 = 4.2;
+    pub fn max_acceleration(&self) -> f32 {
+        self.max_acceleration
+    }
 
+    pub fn tick(&self, body: &mut PhysicsBody, state: &State) -> Self {
         if let Some(food) =
             state
                 .entities()
@@ -36,13 +42,14 @@ impl Creature {
             let target_delta = target_location - body.location();
             let cur_velocity = body.velocity();
             let target_acceleration = target_delta - cur_velocity;
-            let norm_acceleration = target_acceleration.normalize() * MAX_ACCELERATION;
+            let norm_acceleration = target_acceleration.normalize() * self.max_acceleration;
 
             body.accelerate(state.config(), norm_acceleration);
         }
 
         Self {
-            energy: self.energy - 0.1 * state.config().tick_length(),
+            energy: self.energy - 0.025 * self.max_acceleration * state.config().tick_length(),
+            ..self.clone()
         }
     }
 
@@ -50,19 +57,22 @@ impl Creature {
         let max_energy = config.creature_max_energy();
         Self {
             energy: self.energy + energy * (1. - (self.energy / max_energy).powi(2)),
+            ..self.clone()
         }
     }
 
-    pub fn reproduce(&self, config: &Config) -> Option<(Self, Self)> {
+    pub fn reproduce(&self, config: &Config, rng: &mut impl Rng) -> Option<(Self, Self)> {
         if self.energy > config.creature_reproduction_energy() {
             let child_energy = self.energy / 2.;
-            println!("Reproducing with energy {child_energy}",);
+            let log_normal = Normal::new(0., 0.1).unwrap().map(|x: f32| x.exp());
             Some((
                 Self {
                     energy: child_energy,
+                    max_acceleration: self.max_acceleration * rng.sample(&log_normal),
                 },
                 Self {
                     energy: child_energy,
+                    max_acceleration: self.max_acceleration * rng.sample(log_normal),
                 },
             ))
         } else {
