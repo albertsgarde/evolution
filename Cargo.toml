@@ -7,18 +7,17 @@ default-run = "main"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-getrandom = { version = "0.2.10", features = ["js"] }
+rand = { version = "0.8.5", default-features = false, features = [] }
 macroquad = "0.4.2"
 nalgebra = { version = "0.32.3", features = [
     "serde",
-    "rand",
+    "rand-no-std",
     "serde-serialize",
 ] }
 serde = { version = "1.0.188", features = ["derive"] }
-rand = "0.8.5"
 rand_pcg = "0.3.1"
 strum = { version = "0.25.0", features = ["derive"] }
-rand_distr = "0.4.3"
+rand_distr = { version = "0.4.3", default-features = false, features = [] }
 itertools = "0.11.0"
 
 [dev-dependencies]
